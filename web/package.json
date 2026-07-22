@@ -1,6 +1,6 @@
 {
   "name": "@codexsun/core-web",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "private": true,
   "type": "module",
   "exports": {
@@ -23,7 +23,6 @@
     "lucide-react": "^1.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sonner": "^2.0.7",
     "zod": "^4.4.3"
   }
 }
