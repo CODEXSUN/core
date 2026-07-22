@@ -1,10 +1,13 @@
 {
   "name": "@codexsun/core",
-  "version": "1.0.42",
+  "version": "1.0.43",
   "description": "CODEXSUN common business foundation",
   "private": false,
   "type": "module",
-  "workspaces": ["api", "web"],
+  "workspaces": [
+    "api",
+    "web"
+  ],
   "exports": {
     "./api": "./api/src/index.ts",
     "./web": "./web/src/index.ts"
@@ -13,7 +16,11 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "version:show": "node tools/repository-release.mjs version:show",
+    "version:bump": "node tools/repository-release.mjs version:bump",
+    "check:versions": "node tools/repository-release.mjs check:versions",
+    "github:now": "node tools/repository-release.mjs github:now"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
