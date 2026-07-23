@@ -2,9 +2,25 @@
 
 ## Version State
 
-Current version: 1.0.44
-Release tag: v-1.0.44
-Changelog label: v 1.0.44
+Current version: 1.0.45
+Release tag: v-1.0.45
+Changelog label: v 1.0.45
+
+## v-1.0.45
+
+### [v 1.0.45] 2026-07-23 11:11 am - Align Framework 1.0.44 dependency
+
+#### Database Changes
+
+- Database update: No.
+
+#### App Codebase Changes
+
+- Refreshed the repository lockfile so Core resolves the verified `@codexsun/framework` `1.0.44`
+  package and its current public contracts.
+- Verified Core API and Web TypeScript compilation and production builds while preserving
+  module-owned migrations, seeds, relationships, and lifecycle behavior.
+- Bumped repository version to 1.0.45.
 
 ## v-1.0.44
 
