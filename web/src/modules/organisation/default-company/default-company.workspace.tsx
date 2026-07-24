@@ -11,27 +11,33 @@ import {
 } from "./default-company.hooks";
 import { DefaultCompanyList } from "./default-company.list";
 import { saveDefaultCompany } from "./default-company.services";
-import type { DefaultCompanySavePayload, LandingAppOption } from "./default-company.types";
+import type {
+  DefaultCompanyRecord,
+  DefaultCompanySavePayload,
+  LandingAppOption
+} from "./default-company.types";
 export function DefaultCompanyWorkspace({
   landingApps,
-  onSaved
+  onSaved,
+  saveRecord = saveDefaultCompany
 }: {
   landingApps: LandingAppOption[];
-  onSaved?: () => void;
+  onSaved?: (record: DefaultCompanyRecord) => void;
+  saveRecord?: (payload: DefaultCompanySavePayload) => Promise<DefaultCompanyRecord>;
 }) {
   const client = useQueryClient();
   const query = useDefaultCompany();
   const lookups = useDefaultCompanyLookups();
   const [editing, setEditing] = useState(false);
   const save = useMutation({
-    mutationFn: (payload: DefaultCompanySavePayload) => saveDefaultCompany(payload),
+    mutationFn: (payload: DefaultCompanySavePayload) => saveRecord(payload),
     onSuccess: async (record) => {
       await client.invalidateQueries({ queryKey: defaultCompanyQueryKey });
       toast.success("Default company saved", {
         description: `${record.companyName} · ${record.financialYearName}`
       });
       setEditing(false);
-      onSaved?.();
+      onSaved?.(record);
     },
     onError: (error) =>
       toast.error("Unable to save default company", {

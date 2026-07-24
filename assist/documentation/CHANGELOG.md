@@ -2,9 +2,28 @@
 
 ## Version State
 
-Current version: 1.0.45
-Release tag: v-1.0.45
-Changelog label: v 1.0.45
+Current version: 1.0.46
+Release tag: v-1.0.46
+Changelog label: v 1.0.46
+
+## v-1.0.46
+
+### [v 1.0.46] 2026-07-24 10:39 am - Synchronize default landing and preserve address spacing
+
+#### Database Changes
+
+- Database update: No.
+
+#### App Codebase Changes
+
+- Added the public Default Company application contract so executable compositions can get, save,
+  and synchronize the landing app through Core-owned service and database boundaries.
+- Allowed the composed workspace to inject the coordinated Default Company save operation and
+  receive the saved record without duplicating Core form behavior.
+- Preserved typed spaces while editing Company and Contact address lines, then normalized leading
+  and trailing whitespace only at submission.
+- Exported the intentional Default Company contract from the Core API package for Platform use.
+- Bumped repository version to 1.0.46.
 
 ## v-1.0.45
 

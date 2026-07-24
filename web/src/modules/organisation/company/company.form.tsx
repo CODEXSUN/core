@@ -678,7 +678,7 @@ function AddressesTab({
                 <TextField
                   label="Address line 2"
                   value={address.addressLine2}
-                  onChange={(value) => update({ ...address, addressLine2: nullable(value) })}
+                  onChange={(value) => update({ ...address, addressLine2: value || null })}
                 />
                 <LookupField
                   label="Country"
@@ -1173,9 +1173,12 @@ function preparePayload(form: CompanySavePayload): CompanySavePayload {
     phones: form.phones
       .filter((item) => item.phone.trim())
       .map((item, index) => ({ ...item, sortOrder: index + 1 })),
-    addresses: form.addresses
-      .filter(hasAddressValue)
-      .map((item, index) => ({ ...item, sortOrder: index + 1 })),
+    addresses: form.addresses.filter(hasAddressValue).map((item, index) => ({
+      ...item,
+      addressLine1: item.addressLine1.trim(),
+      addressLine2: nullable(item.addressLine2),
+      sortOrder: index + 1
+    })),
     bankAccounts: form.bankAccounts
       .filter((item) => item.accountNumber.trim())
       .map((item, index) => ({ ...item, sortOrder: index + 1 })),

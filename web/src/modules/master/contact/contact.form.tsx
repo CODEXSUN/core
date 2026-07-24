@@ -532,7 +532,7 @@ function AddressesTab({
                       onChange={(event) =>
                         updateAddress(setForm, index, {
                           ...address,
-                          addressLine2: nullable(event.target.value)
+                          addressLine2: event.target.value || null
                         })
                       }
                     />
@@ -1152,6 +1152,7 @@ function preparePayload(form: ContactSavePayload): ContactSavePayload {
     addresses: form.addresses.filter(hasAddressValue).map((item, index) => ({
       ...item,
       addressLine1: item.addressLine1.trim(),
+      addressLine2: nullable(item.addressLine2),
       sortOrder: index + 1
     })),
     bankAccounts: form.bankAccounts
