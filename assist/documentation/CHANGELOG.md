@@ -2,9 +2,27 @@
 
 ## Version State
 
-Current version: 1.0.46
-Release tag: v-1.0.46
-Changelog label: v 1.0.46
+Current version: 1.0.47
+Release tag: v-1.0.47
+Changelog label: v 1.0.47
+
+## v-1.0.47
+
+### [v 1.0.47] 2026-07-25 9:17 am - Align administrator permissions and repository line endings
+
+#### Database Changes
+
+- Database update: Yes.
+- Assigned Core application, organisation, master, common, and contact permissions to both the
+  protected `super-admin` role and visible `admin` role when those persisted tenant roles exist.
+
+#### App Codebase Changes
+
+- Standardized detected repository text files on LF through a repository-owned `.gitattributes`
+  policy, preventing Windows Git from repeatedly warning about LF-to-CRLF conversion.
+- Aligned Core permission seeding with composed applications that keep a single protected Super
+  Admin hidden from normal tenant role management.
+- Bumped repository version to 1.0.47.
 
 ## v-1.0.46
 

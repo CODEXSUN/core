@@ -24,7 +24,7 @@ Tenant database only. Order: legacy-name normalization → Common lookups → Or
 
 ## Seed Contract
 
-The seed order mirrors migrations: Common (including the complete location hierarchy) → Organisation → Master → Core permissions. Parent records are resolved from persisted identities, never sibling seed arrays.
+The seed order mirrors migrations: Common (including the complete location hierarchy) → Organisation → Master → Core permissions. Parent records are resolved from persisted identities, never sibling seed arrays. Core permissions are assigned to both the composing application's hidden protected `super-admin` role and its visible assignable `admin` role when those persisted roles exist.
 
 ## Environment Contract
 

@@ -8,6 +8,7 @@ const permissions = [
   "core.application.records.delete",
   "core.application.records.lifecycle"
 ] as const;
+const administratorRoleKeys = ["super-admin", "admin"] as const;
 
 export async function seedCoreTenantPermissions(database: Kysely<unknown>) {
   const available = await sql<{ table_count: string | number }>`
@@ -23,14 +24,15 @@ export async function seedCoreTenantPermissions(database: Kysely<unknown>) {
       ON DUPLICATE KEY UPDATE
         label=VALUES(label), description=VALUES(description), status='active', is_protected=TRUE
     `.execute(database);
-    await sql`
-      INSERT INTO role_permissions (uuid, role_id, permission_id, status, is_protected)
-      SELECT ${stable(`role-permission:admin:${key}`)}, role.id, permission.id, 'active', TRUE
-      FROM roles role
-      INNER JOIN permissions permission ON permission.\`key\`=${key}
-      WHERE role.\`key\`='admin'
-      ON DUPLICATE KEY UPDATE status='active', is_protected=TRUE
-    `.execute(database);
+    for (const roleKey of administratorRoleKeys)
+      await sql`
+        INSERT INTO role_permissions (uuid, role_id, permission_id, status, is_protected)
+        SELECT ${stable(`role-permission:${roleKey}:${key}`)}, role.id, permission.id, 'active', TRUE
+        FROM roles role
+        INNER JOIN permissions permission ON permission.\`key\`=${key}
+        WHERE role.\`key\`=${roleKey}
+        ON DUPLICATE KEY UPDATE status='active', is_protected=TRUE
+      `.execute(database);
   }
 }
 
