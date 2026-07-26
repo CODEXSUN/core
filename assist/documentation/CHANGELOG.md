@@ -2,9 +2,24 @@
 
 ## Version State
 
-Current version: 1.0.47
-Release tag: v-1.0.47
-Changelog label: v 1.0.47
+Current version: 1.0.48
+Release tag: v-1.0.48
+Changelog label: v 1.0.48
+
+## v-1.0.48
+
+### [v 1.0.48] 2026-07-26 3:08 pm - Stabilize workspace command execution
+
+#### Database Changes
+
+- Database update: No.
+
+#### App Codebase Changes
+
+- Replaced direct npm workspace fan-out with the repository-owned Node workspace command so build,
+  typecheck, and lint run reliably on the supported Windows and Node runtime.
+- Refreshed the ESLint toolchain and lockfile without changing Core business contracts.
+- Bumped repository version to 1.0.48.
 
 ## v-1.0.47
 

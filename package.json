@@ -1,6 +1,6 @@
 {
   "name": "@codexsun/core",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "description": "CODEXSUN common business foundation",
   "private": false,
   "type": "module",
@@ -13,9 +13,9 @@
     "./web": "./web/src/index.ts"
   },
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
+    "build": "node tools/workspace-command.mjs build",
+    "typecheck": "node tools/workspace-command.mjs typecheck",
+    "lint": "node tools/workspace-command.mjs lint",
     "format:check": "prettier . --check",
     "version:show": "node tools/repository-release.mjs version:show",
     "version:bump": "node tools/repository-release.mjs version:bump",
@@ -23,13 +23,13 @@
     "github:now": "node tools/repository-release.mjs github:now"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.1",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
-    "eslint": "^9.17.0",
+    "eslint": "^10.8.0",
     "prettier": "^3.4.2",
     "typescript": "^7.0.2",
     "typescript-eslint-compiler": "npm:typescript@6.0.3",
