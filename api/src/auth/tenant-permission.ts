@@ -22,7 +22,28 @@ export async function authorizeCoreRequest(
   if (!result.rows[0]) throw AppError.forbidden(`Permission ${permission} is required.`);
 }
 
-function corePermission(request: FastifyRequest) {
+export function authorizeCorePrincipal(
+  request: FastifyRequest,
+  principal: {
+    permissions: readonly string[];
+    roles: readonly string[];
+  }
+) {
+  const permission = corePermission(request);
+  const grants = new Set(principal.permissions);
+  if (
+    grants.has(permission) ||
+    grants.has("core:*") ||
+    grants.has("tenant:*") ||
+    principal.roles.includes("super-admin") ||
+    principal.roles.includes("tenant-admin")
+  ) {
+    return;
+  }
+  throw AppError.forbidden(`Permission ${permission} is required.`);
+}
+
+export function corePermission(request: FastifyRequest) {
   const method = request.method.toUpperCase();
   const route = request.routeOptions.url ?? request.url;
   if (method === "GET" || method === "HEAD") return "core.application.records.view";

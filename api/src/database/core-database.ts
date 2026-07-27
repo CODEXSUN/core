@@ -17,7 +17,12 @@ import { organisationMigrationSteps } from "../modules/organisation/organisation
 
 export type CoreDatabase = Record<string, unknown>;
 
-const context = new AsyncLocalStorage<string>();
+type CoreDatabaseContext = {
+  database?: Kysely<CoreDatabase>;
+  databaseName: string;
+};
+
+const context = new AsyncLocalStorage<CoreDatabaseContext>();
 type CoreConnectionEntry = { database: Kysely<CoreDatabase>; lastUsedAt: number };
 
 const connections = new Map<string, CoreConnectionEntry>();
@@ -46,12 +51,26 @@ export function resolveCoreDatabaseName(value: unknown) {
   return requested;
 }
 
-export function runWithCoreDatabase<T>(databaseName: string, callback: () => T) {
-  return context.run(resolveCoreDatabaseName(databaseName), callback);
+export function runWithCoreDatabase<T>(
+  databaseName: string,
+  callback: () => T,
+  database?: Kysely<CoreDatabase>
+) {
+  return context.run(
+    {
+      ...(database ? { database } : {}),
+      databaseName: resolveCoreDatabaseName(databaseName)
+    },
+    callback
+  );
 }
 
-export function getCoreDatabase(databaseName = context.getStore()) {
+export function getCoreDatabase(databaseName = context.getStore()?.databaseName) {
   const name = resolveCoreDatabaseName(databaseName);
+  const activeContext = context.getStore();
+  if (activeContext?.database && activeContext.databaseName === name) {
+    return activeContext.database;
+  }
   const existing = connections.get(name);
   if (existing) {
     existing.lastUsedAt = Date.now();
@@ -77,18 +96,22 @@ export function getCoreDatabase(databaseName = context.getStore()) {
   return database;
 }
 
-export async function bootstrapCoreDatabase(databaseName: string) {
+export async function bootstrapCoreDatabase(databaseName: string, database?: Kysely<CoreDatabase>) {
   const name = resolveCoreDatabaseName(databaseName);
   if (migrated.has(name)) return;
   const active = bootstrapping.get(name);
   if (active) return active;
-  const promise = runWithCoreDatabase(name, async () => {
-    await ensureDatabase(name);
-    const database = getCoreDatabase(name);
-    await migrateCoreModules(database);
-    await seedCoreModules(database);
-    migrated.add(name);
-  });
+  const promise = runWithCoreDatabase(
+    name,
+    async () => {
+      if (!database) await ensureDatabase(name);
+      const activeDatabase = database ?? getCoreDatabase(name);
+      await migrateCoreModules(activeDatabase);
+      await seedCoreModules(activeDatabase);
+      migrated.add(name);
+    },
+    database
+  );
   bootstrapping.set(name, promise);
   try {
     await promise;

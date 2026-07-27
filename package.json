@@ -9,8 +9,12 @@
     "web"
   ],
   "exports": {
-    "./api": "./api/src/index.ts",
-    "./web": "./web/src/index.ts"
+    "./api": {
+      "types": "./api/src/index.ts",
+      "default": "./dist/api/index.js"
+    },
+    "./web": "./web/src/index.ts",
+    "./web/cxapp": "./web/src/cxapp.tsx"
   },
   "scripts": {
     "build": "node tools/workspace-command.mjs build",

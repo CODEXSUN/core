@@ -6,6 +6,10 @@ Current version: 1.0.48
 Release tag: v-1.0.48
 Changelog label: v 1.0.48
 
+## Unreleased
+
+### Add reusable Core host-composition contracts
+
 ## v-1.0.48
 
 ### [v 1.0.48] 2026-07-26 3:08 pm - Stabilize workspace command execution
@@ -16,6 +20,16 @@ Changelog label: v 1.0.48
 
 #### App Codebase Changes
 
+- Added a host-adaptable Core API registration contract that accepts trusted tenant database and
+  principal context while preserving the existing CODEXSUN Platform registration path.
+- Added host-principal permission authorization and support for host-provided Kysely database
+  instances without moving Core migrations, seeders, or business ownership into the host.
+- Published granular Core API component keys for common, organisation, and master modules.
+- Added the Core Web bundle containing lazy workspace contributions and the shared application
+  context for active company, branding, financial year, and persisted default selection.
+- Added CXApp session-token compatibility and flexible standalone API/database environment aliases.
+- Updated public package exports and repository documentation for executable hosts that compose
+  Core-owned API and Web functionality.
 - Replaced direct npm workspace fan-out with the repository-owned Node workspace command so build,
   typecheck, and lint run reliably on the supported Windows and Node runtime.
 - Refreshed the ESLint toolchain and lockfile without changing Core business contracts.

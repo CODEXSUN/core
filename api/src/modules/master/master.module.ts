@@ -2,6 +2,12 @@ import type { FastifyInstance } from "fastify";
 import { contactModule } from "./contact/index.js";
 import { productModule } from "./product/index.js";
 import { workOrderModule } from "./work-order/index.js";
+export const masterApiModuleKeys = [
+  contactModule.key,
+  productModule.key,
+  workOrderModule.key
+] as const;
+
 export const masterModule = {
   key: "core.master",
   async register(app: FastifyInstance) {

@@ -5,7 +5,7 @@ const ACCOUNTING_YEAR_ID_KEY = "codexsun.tenant.financial-year-id";
 
 export function getToken(_desk?: "tenant"): string | null {
   try {
-    return localStorage.getItem(TENANT_TOKEN_KEY);
+    return localStorage.getItem(TENANT_TOKEN_KEY) ?? sessionStorage.getItem("cxapp.admin.token");
   } catch {
     return null;
   }

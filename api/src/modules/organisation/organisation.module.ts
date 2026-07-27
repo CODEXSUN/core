@@ -3,6 +3,12 @@ import { companyModule } from "./company/index.js";
 import { defaultCompanyModule } from "./default-company/index.js";
 import { financialYearModule } from "./financial-year/index.js";
 
+export const organisationApiModuleKeys = [
+  companyModule.key,
+  financialYearModule.key,
+  defaultCompanyModule.key
+] as const;
+
 export const organisationModule = {
   key: "core.organisation",
   label: "Organisation",

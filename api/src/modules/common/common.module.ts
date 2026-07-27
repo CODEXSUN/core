@@ -26,6 +26,7 @@ import { warehousesModule } from "./workorder/warehouses/warehouses.module.js";
 import { workOrderTypesModule } from "./workorder/work-order-types/work-order-types.module.js";
 import { ledgerGroupsModule } from "./accounts/ledger-groups/ledger-groups.module.js";
 import { ledgersModule } from "./accounts/ledgers/ledgers.module.js";
+import { locationModules } from "./location/location.module.js";
 const modules = [
   locationModule,
   ledgerGroupsModule,
@@ -55,6 +56,11 @@ const modules = [
   warehousesModule,
   workOrderTypesModule
 ];
+export const commonApiModuleKeys = [
+  ...locationModules.map((module) => module.key),
+  ...modules.filter((module) => module !== locationModule).map((module) => module.key)
+] as const;
+
 export const commonModule = {
   key: "core.common",
   label: "Common",

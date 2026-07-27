@@ -32,7 +32,14 @@ No repository-local `.env` is required. Runtime values are loaded from the compo
 
 ## Composition Contract
 
-This repository exposes intentional public package contracts. The `codexsun` repository is the executable composition root. It may install, register, order, build, and invoke exported lifecycle functions; it must not copy this repository's business implementation.
+This repository exposes intentional public package contracts. Executable composition roots may
+install, register, order, build, and invoke exported lifecycle functions; they must not copy this
+repository's business implementation. The existing `registerCoreApi()` contract supports the
+CODEXSUN Platform host. `registerCoreApiForHost()` supports trusted reusable runtimes by accepting
+the host-resolved tenant database, principal and permission grants. `coreWebBundle` is the matching
+Core-owned workspace and navigation contribution. `useCoreApplicationContext()` is the public web
+composition hook for the active company logo/name, financial year, and persisted default switcher;
+hosts render that context but do not reimplement Core organisation rules.
 
 ## Required Checks
 
