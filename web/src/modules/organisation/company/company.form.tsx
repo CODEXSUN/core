@@ -171,7 +171,7 @@ export function CompanyForm({
             ) : null}
             <WorkspaceAnimatedTabs
               keepMounted
-              contentClassName="mt-5"
+              contentClassName="mt-0 pt-8"
               tabs={tabs}
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as CompanyTab)}

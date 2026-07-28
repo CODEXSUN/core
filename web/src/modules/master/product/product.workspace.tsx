@@ -48,7 +48,9 @@ export function ProductWorkspace() {
       editing ? updateProduct(editing.id, payload) : createProduct(payload),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: productsQueryKey });
-      toast.success("Product saved");
+      toast.success("Product saved", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setEditing(undefined);
     },
     onError: (error) => toast.error("Unable to save product", { description: error.message })

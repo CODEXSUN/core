@@ -1,6 +1,6 @@
 export function requiredClientEnv(name: string): string {
   const value = import.meta.env[name];
-  if (typeof value !== "string" || !value.trim()) {
+  if (typeof value !== "string") {
     throw new Error(`Missing required client environment value: ${name}`);
   }
   return value.trim();

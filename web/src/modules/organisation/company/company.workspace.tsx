@@ -56,7 +56,9 @@ export function CompanyWorkspace() {
       editing ? updateCompany(editing.id, payload) : createCompany(payload),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: companiesQueryKey });
-      toast.success("Company saved");
+      toast.success("Company saved", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setEditing(undefined);
     },
     onError: (error) => toast.error("Unable to save company", { description: error.message })
@@ -76,7 +78,9 @@ export function CompanyWorkspace() {
           : deactivateCompany(record.id),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: companiesQueryKey });
-      toast.success("Company status updated");
+      toast.success("Company status updated", {
+        description: "The latest lifecycle status is now reflected in the list."
+      });
     },
     onError: (error) => toast.error("Unable to update company", { description: error.message })
   });

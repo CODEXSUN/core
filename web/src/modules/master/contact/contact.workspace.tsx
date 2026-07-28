@@ -60,7 +60,9 @@ export function ContactWorkspace() {
       editing ? updateContact(editing.id, payload) : createContact(payload),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: contactsQueryKey });
-      toast.success("Contact saved");
+      toast.success("Contact saved", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setNewCode("");
       setEditing(undefined);
     },

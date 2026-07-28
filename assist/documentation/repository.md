@@ -22,9 +22,15 @@ Excluded ownership: Platform tenant/auth operations, Billing documents, Mail int
 
 Tenant database only. Order: legacy-name normalization → Common lookups → Organisation → Master. Location is Country → State → District → City → Pincode; Organisation is Company → Financial Year → Default Company; Master is Contact → Product → Work Order.
 
+Every Core-owned physical table uses the `core_` prefix and Core records lifecycle evidence in
+`core_schema_migrations`. Migration `004_prefix_core_table_names` forward-renames existing
+unprefixed tables without copying or dropping data. Updatable unprefixed compatibility views
+preserve existing public repository contracts during the transition; new foreign keys must target
+the physical `core_*` tables.
+
 ## Seed Contract
 
-The seed order mirrors migrations: Common (including the complete location hierarchy) → Organisation → Master → Core permissions. Parent records are resolved from persisted identities, never sibling seed arrays. Core permissions are assigned to both the composing application's hidden protected `super-admin` role and its visible assignable `admin` role when those persisted roles exist.
+The seed order mirrors migrations: Common (including the complete location hierarchy) → Organisation → Master → Core permissions. Parent records are resolved from persisted identities, never sibling seed arrays. Organisation seeding preserves existing records, backfills the seven financial years from three years before through three years after the current financial year, and initializes Default Company with `application` as its editable landing app. Core permissions are assigned to the composing application's protected `super-admin`, `admin`, and assignable `administrator` roles when those persisted roles exist.
 
 ## Environment Contract
 
@@ -47,6 +53,9 @@ hosts render that context but do not reimplement Core organisation rules.
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
+- `npm run test:stack` creates an isolated MariaDB database and verifies fresh plus repeated
+  migrations, seeds, every Core contract consumed by Billing, `core_*` physical tables,
+  compatibility views, and representative owner CRUD/lifecycle behavior.
 - `npm run check:versions`
 - `npm run github:now -- --dry-run`
 

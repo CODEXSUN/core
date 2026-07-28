@@ -64,7 +64,9 @@ export function FinancialYearWorkspace() {
             : deactivateFinancialYear(record.id),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: financialYearsQueryKey });
-      toast.success("Financial year updated");
+      toast.success("Financial year updated", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setAction(null);
     },
     onError: (error) =>

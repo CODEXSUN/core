@@ -4,15 +4,12 @@ import { createPool, type PoolOptions } from "mysql2";
 import { createConnection } from "mysql2/promise";
 import { seedCoreTenantPermissions } from "../auth/tenant-permission.seed.js";
 import { env } from "../env.js";
-import { commonMigrationSteps, migrateCommonModule } from "../modules/common/common.migration.js";
+import { commonMigrationSteps } from "../modules/common/common.migration.js";
 import { seedCommonModule } from "../modules/common/common.seed.js";
 import { removeUnknownCountrySeed } from "../modules/common/location/country/index.js";
-import { migrateMasterModule, seedMasterModule } from "../modules/master/index.js";
+import { seedMasterModule } from "../modules/master/index.js";
 import { masterMigrationSteps } from "../modules/master/master.migration.js";
-import {
-  migrateOrganisationModule,
-  seedOrganisationModule
-} from "../modules/organisation/index.js";
+import { seedOrganisationModule } from "../modules/organisation/index.js";
 import { organisationMigrationSteps } from "../modules/organisation/organisation.migration.js";
 
 export type CoreDatabase = Record<string, unknown>;
@@ -39,14 +36,18 @@ export const coreTenantMigrations = [
   },
   ...commonMigrationSteps.map(({ description, key }) => ({ description, name: key })),
   ...organisationMigrationSteps.map(({ description, key }) => ({ description, name: key })),
-  ...masterMigrationSteps.map(({ description, key }) => ({ description, name: key }))
+  ...masterMigrationSteps.map(({ description, key }) => ({ description, name: key })),
+  {
+    description: "Prefix every Core-owned physical table while preserving legacy query aliases.",
+    name: "004_prefix_core_table_names"
+  }
 ] as const;
 
-export function resolveCoreDatabaseName(value: unknown) {
+export function resolveCoreDatabaseName(value: unknown, allowMasterDatabase = false) {
   const requested = typeof value === "string" ? value.trim() : "";
   if (!requested) throw new Error("x-tenant-db is required for Core database access.");
   if (!/^[a-zA-Z0-9_]+$/.test(requested)) throw new Error("Invalid tenant database name.");
-  if (requested === env.DB_MASTER_NAME)
+  if (!allowMasterDatabase && requested === env.DB_MASTER_NAME)
     throw new Error("Core tables cannot use the Platform master database.");
   return requested;
 }
@@ -59,15 +60,18 @@ export function runWithCoreDatabase<T>(
   return context.run(
     {
       ...(database ? { database } : {}),
-      databaseName: resolveCoreDatabaseName(databaseName)
+      databaseName: resolveCoreDatabaseName(databaseName, database !== undefined)
     },
     callback
   );
 }
 
 export function getCoreDatabase(databaseName = context.getStore()?.databaseName) {
-  const name = resolveCoreDatabaseName(databaseName);
   const activeContext = context.getStore();
+  const name = resolveCoreDatabaseName(
+    databaseName,
+    activeContext?.database !== undefined && activeContext.databaseName === databaseName
+  );
   if (activeContext?.database && activeContext.databaseName === name) {
     return activeContext.database;
   }
@@ -97,7 +101,7 @@ export function getCoreDatabase(databaseName = context.getStore()?.databaseName)
 }
 
 export async function bootstrapCoreDatabase(databaseName: string, database?: Kysely<CoreDatabase>) {
-  const name = resolveCoreDatabaseName(databaseName);
+  const name = resolveCoreDatabaseName(databaseName, database !== undefined);
   if (migrated.has(name)) return;
   const active = bootstrapping.get(name);
   if (active) return active;
@@ -144,17 +148,44 @@ export async function seedCoreTenantDatabase(databaseName: string) {
 }
 
 async function recordCoreMigration(database: Kysely<CoreDatabase>, name: string) {
-  await sql`INSERT IGNORE INTO schema_migrations (name) VALUES (${name})`.execute(database);
+  await sql`
+    INSERT IGNORE INTO schema_migrations (package_id, name)
+    VALUES ('@codexsun/core', ${name})
+  `.execute(database);
+}
+
+async function hasCoreMigration(database: Kysely<CoreDatabase>, name: string) {
+  const result = await sql<{ migration_count: number | string }>`
+    SELECT COUNT(*) AS migration_count
+    FROM schema_migrations
+    WHERE package_id = '@codexsun/core' AND name = ${name}
+  `.execute(database);
+  return Number(result.rows[0]?.migration_count ?? 0) > 0;
+}
+
+async function runPendingCoreMigrationSteps(
+  database: Kysely<CoreDatabase>,
+  steps: readonly {
+    key: string;
+    migrate: (database: Kysely<CoreDatabase>) => Promise<unknown>;
+  }[]
+) {
+  for (const step of steps) {
+    if (await hasCoreMigration(database, step.key)) continue;
+    await step.migrate(database);
+    await recordCoreMigration(database, step.key);
+  }
 }
 
 async function migrateCoreModules(database: Kysely<CoreDatabase>) {
   await flattenLegacyCoreTableNames(database);
-  await migrateCommonModule(database);
-  for (const step of commonMigrationSteps) await recordCoreMigration(database, step.key);
-  await migrateOrganisationModule(database);
-  for (const step of organisationMigrationSteps) await recordCoreMigration(database, step.key);
-  await migrateMasterModule(database);
-  for (const step of masterMigrationSteps) await recordCoreMigration(database, step.key);
+  await runPendingCoreMigrationSteps(database, commonMigrationSteps);
+  await runPendingCoreMigrationSteps(database, organisationMigrationSteps);
+  await runPendingCoreMigrationSteps(database, masterMigrationSteps);
+  if (!(await hasCoreMigration(database, "004_prefix_core_table_names"))) {
+    await prefixCoreTableNames(database);
+    await recordCoreMigration(database, "004_prefix_core_table_names");
+  }
 }
 
 async function seedCoreModules(database: Kysely<CoreDatabase>) {
@@ -171,22 +202,23 @@ async function flattenLegacyCoreTableNames(database: Kysely<CoreDatabase>) {
   await sql
     .raw(
       "CREATE TABLE IF NOT EXISTS schema_migrations (" +
-        "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(160) NOT NULL UNIQUE, " +
+        "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, package_id VARCHAR(160) NOT NULL DEFAULT 'legacy', " +
+        "name VARCHAR(160) NOT NULL UNIQUE, " +
         "applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     )
     .execute(database);
   const result = await sql<{ table_name: string }>`
     SELECT TABLE_NAME AS table_name
     FROM information_schema.TABLES
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'core\_%'
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND (TABLE_NAME LIKE 'core\_common\_%' OR TABLE_NAME LIKE 'core\_master\_%')
     ORDER BY TABLE_NAME
   `.execute(database);
 
   for (const { table_name: legacyName } of result.rows) {
     const currentName = legacyName
-      .replace(/^core_common_/, "")
-      .replace(/^core_master_/, "")
-      .replace(/^core_/, "");
+      .replace(/^core_common_/, "core_")
+      .replace(/^core_master_/, "core_");
     const existing = await sql<{ table_count: number | string }>`
       SELECT COUNT(*) AS table_count
       FROM information_schema.TABLES
@@ -198,9 +230,117 @@ async function flattenLegacyCoreTableNames(database: Kysely<CoreDatabase>) {
     await sql.raw(`RENAME TABLE \`${legacyName}\` TO \`${currentName}\``).execute(database);
   }
 
-  await sql`INSERT IGNORE INTO schema_migrations (name) VALUES ('003_flatten_core_table_names')`.execute(
-    database
-  );
+  await ensureCoreMigrationJournal(database);
+  await recordCoreMigration(database, "003_flatten_core_table_names");
+}
+
+async function ensureCoreMigrationJournal(database: Kysely<CoreDatabase>) {
+  await sql`
+    ALTER TABLE schema_migrations
+    ADD COLUMN IF NOT EXISTS package_id VARCHAR(160) NOT NULL DEFAULT 'legacy' AFTER id
+  `.execute(database);
+  const legacyJournal = await tableType(database, "core_schema_migrations");
+  if (legacyJournal === "BASE TABLE") {
+    await sql`
+      INSERT IGNORE INTO schema_migrations (package_id, name, applied_at)
+      SELECT '@codexsun/core', name, applied_at
+      FROM core_schema_migrations
+    `.execute(database);
+    await sql`DROP TABLE core_schema_migrations`.execute(database);
+  }
+  await sql`
+    UPDATE schema_migrations
+    SET package_id = '@codexsun/core'
+    WHERE package_id = 'legacy'
+      AND (
+        name LIKE 'core.%'
+        OR name IN ('003_flatten_core_table_names', '004_prefix_core_table_names')
+      )
+  `.execute(database);
+}
+
+const coreOwnedTables = [
+  "address_types",
+  "bank_names",
+  "brands",
+  "cities",
+  "colours",
+  "companies",
+  "companies_addresses",
+  "companies_bank_accounts",
+  "companies_emails",
+  "companies_phones",
+  "companies_social_links",
+  "contact_groups",
+  "contact_types",
+  "contacts",
+  "contacts_addresses",
+  "contacts_bank_accounts",
+  "contacts_emails",
+  "contacts_phones",
+  "contacts_social_links",
+  "countries",
+  "currencies",
+  "default_company_settings",
+  "destinations",
+  "districts",
+  "financial_years",
+  "hsn_codes",
+  "ledger_groups",
+  "ledgers",
+  "months",
+  "payment_terms",
+  "pincodes",
+  "priorities",
+  "product_categories",
+  "product_groups",
+  "product_types",
+  "products",
+  "sales_types",
+  "sizes",
+  "states",
+  "stock_rejection_types",
+  "styles",
+  "taxes",
+  "transports",
+  "units",
+  "warehouses",
+  "work_order_types",
+  "work_orders"
+] as const;
+
+async function prefixCoreTableNames(database: Kysely<CoreDatabase>) {
+  for (const legacyName of coreOwnedTables) {
+    const prefixedName = `core_${legacyName}`;
+    const legacyType = await tableType(database, legacyName);
+    const prefixedType = await tableType(database, prefixedName);
+
+    if (legacyType === "BASE TABLE" && prefixedType) {
+      throw new Error(
+        `Cannot prefix Core table ${legacyName}: ${prefixedName} already exists as ${prefixedType}.`
+      );
+    }
+    if (legacyType === "BASE TABLE") {
+      await sql.raw(`RENAME TABLE \`${legacyName}\` TO \`${prefixedName}\``).execute(database);
+    }
+    if ((await tableType(database, prefixedName)) === "BASE TABLE") {
+      await sql
+        .raw(
+          `CREATE OR REPLACE ALGORITHM=MERGE VIEW \`${legacyName}\` AS ` +
+            `SELECT * FROM \`${prefixedName}\``
+        )
+        .execute(database);
+    }
+  }
+}
+
+async function tableType(database: Kysely<CoreDatabase>, tableName: string) {
+  const result = await sql<{ table_type: string }>`
+    SELECT TABLE_TYPE AS table_type
+    FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ${tableName}
+  `.execute(database);
+  return result.rows[0]?.table_type;
 }
 
 export async function bootstrapRegisteredCoreDatabases() {

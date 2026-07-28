@@ -36,6 +36,7 @@ export function FinancialYearForm({
 }) {
   return (
     <WorkspaceUpsertDialog
+      className="sm:max-w-xl"
       description="Define the dates used to scope accounting and transaction workflows."
       onClose={onCancel}
       open={open}

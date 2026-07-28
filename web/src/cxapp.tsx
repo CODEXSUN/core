@@ -1,5 +1,15 @@
 import { lazy, useEffect, useMemo, type ComponentType, type LazyExoticComponent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { SidemenuItem } from "@codexsun/ui/blocks/menu/sidemenu/sub/sidemenu-section";
+import {
+  ClipboardListIcon,
+  Globe2Icon,
+  LandmarkIcon,
+  MapPinnedIcon,
+  PackageIcon,
+  Settings2Icon,
+  UsersIcon
+} from "lucide-react";
 import { useCompanyBranding } from "./modules/organisation/company/company.branding";
 import { listCompanies } from "./modules/organisation/company/company.services";
 import { listFinancialYears } from "./modules/organisation/financial-year/financial-year.services";
@@ -31,7 +41,7 @@ const workspace = (
 export const coreWebBundle = Object.freeze({
   id: "core",
   title: "Core",
-  version: "1.0.48",
+  version: "1.0.49",
   workspaces: Object.freeze([
     workspace("companies", "Companies", "Organisation", () =>
       import("./modules/organisation/company").then((module) => ({
@@ -45,7 +55,7 @@ export const coreWebBundle = Object.freeze({
     ),
     workspace("default-company", "Default Company", "Organisation", () =>
       import("./modules/organisation/default-company").then((module) => ({
-        default: () => <module.DefaultCompanyWorkspace landingApps={[]} />
+        default: () => <module.DefaultCompanyWorkspace landingApps={cxappLandingApps} />
       }))
     ),
     workspace("contacts", "Contacts", "Masters", () =>
@@ -218,8 +228,105 @@ export const coreWebBundle = Object.freeze({
         default: module.WorkOrderTypesWorkspace
       }))
     )
-  ])
+  ]),
+  embeddedMenuItems(activeWorkspaceId: string, rootPath: string): SidemenuItem[] {
+    return coreEmbeddedMenuItems(activeWorkspaceId, rootPath);
+  },
+  resolveEmbeddedWorkspace(pathname: string, rootPath: string) {
+    const prefix = `${rootPath.replace(/\/$/, "")}/core/`;
+    if (!pathname.startsWith(prefix)) return undefined;
+    const workspaceId = pathname.slice(prefix.length).split("/")[0];
+    return this.workspaces.find((entry) => entry.id === workspaceId);
+  }
 });
+
+const cxappLandingApps = [
+  { label: "Application", value: "application" },
+  { label: "DevKit", value: "devkit" },
+  { label: "Billing", value: "billing" }
+];
+
+function coreEmbeddedMenuItems(activeWorkspaceId: string, rootPath: string): SidemenuItem[] {
+  const workspaceUrl = (id: string) => `${rootPath.replace(/\/$/, "")}/core/${id}`;
+  const item = (id: string, title: string) => ({
+    isActive: activeWorkspaceId === id,
+    title,
+    url: workspaceUrl(id)
+  });
+  const group = (
+    title: string,
+    icon: typeof Globe2Icon,
+    entries: Array<ReturnType<typeof item>>
+  ): SidemenuItem => ({
+    icon,
+    isActive: entries.some((entry) => entry.isActive),
+    items: entries,
+    title,
+    url: entries[0]!.url
+  });
+
+  const location = group("Location", MapPinnedIcon, [
+    item("countries", "Countries"),
+    item("states", "States"),
+    item("districts", "Districts"),
+    item("cities", "Cities"),
+    item("pincodes", "Pincodes")
+  ]);
+  const commonGroups = [
+    location,
+    group("Accounts", LandmarkIcon, [
+      item("ledger-groups", "Ledger Groups"),
+      item("ledgers", "Ledgers")
+    ]),
+    group("Contacts", UsersIcon, [
+      item("contact-groups", "Contact Groups"),
+      item("contact-types", "Contact Types"),
+      item("address-types", "Address Types"),
+      item("bank-names", "Bank Names")
+    ]),
+    group("Product", PackageIcon, [
+      item("product-groups", "Product Groups"),
+      item("product-categories", "Product Categories"),
+      item("product-types", "Product Types"),
+      item("units", "Units"),
+      item("hsn-codes", "HSN Codes"),
+      item("taxes", "Taxes"),
+      item("brands", "Brands"),
+      item("colours", "Colours"),
+      item("sizes", "Sizes"),
+      item("styles", "Styles")
+    ]),
+    group("Work Orders", ClipboardListIcon, [
+      item("work-order-types", "Work Order Types"),
+      item("transports", "Transports"),
+      item("warehouses", "Warehouses"),
+      item("destinations", "Destinations"),
+      item("stock-rejection-types", "Stock Rejection Types")
+    ]),
+    group("Others", Settings2Icon, [
+      item("currencies", "Currencies"),
+      item("priorities", "Priorities"),
+      item("payment-terms", "Payment Terms"),
+      item("sales-types", "Sales Types"),
+      item("months", "Months")
+    ])
+  ];
+
+  return [
+    group("Master", PackageIcon, [
+      item("contacts", "Contact"),
+      item("products", "Product"),
+      item("work-orders", "Work Order")
+    ]),
+    {
+      icon: Globe2Icon,
+      isActive: commonGroups.some((entry) => entry.isActive),
+      items: commonGroups,
+      title: "Common",
+      url: workspaceUrl("countries")
+    }
+  ];
+}
 
 export function useCoreApplicationContext(enabled = true) {
   const queryClient = useQueryClient();

@@ -39,7 +39,9 @@ export function WorkOrderWorkspace() {
       editing ? updateWorkOrder(editing.id, payload) : createWorkOrder(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["core", "work-order", "list"] });
-      toast.success("Work order saved");
+      toast.success("Work order saved", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setEditing(undefined);
     },
     onError: (error) =>

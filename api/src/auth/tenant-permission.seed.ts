@@ -8,7 +8,7 @@ const permissions = [
   "core.application.records.delete",
   "core.application.records.lifecycle"
 ] as const;
-const administratorRoleKeys = ["super-admin", "admin"] as const;
+const administratorRoleKeys = ["super-admin", "admin", "administrator"] as const;
 
 export async function seedCoreTenantPermissions(database: Kysely<unknown>) {
   const available = await sql<{ table_count: string | number }>`

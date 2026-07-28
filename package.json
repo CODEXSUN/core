@@ -1,6 +1,6 @@
 {
   "name": "@codexsun/core",
-  "version": "1.0.48",
+  "version": "1.0.49",
   "description": "CODEXSUN common business foundation",
   "private": false,
   "type": "module",
@@ -20,6 +20,8 @@
     "build": "node tools/workspace-command.mjs build",
     "typecheck": "node tools/workspace-command.mjs typecheck",
     "lint": "node tools/workspace-command.mjs lint",
+    "test:e2e": "npm run build && node tools/core-stack-e2e.mjs",
+    "test:stack": "npm run test:e2e",
     "format:check": "prettier . --check",
     "version:show": "node tools/repository-release.mjs version:show",
     "version:bump": "node tools/repository-release.mjs version:bump",

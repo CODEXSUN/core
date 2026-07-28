@@ -59,7 +59,9 @@ export function LedgersWorkspace() {
           : deactivateLedger(record.id),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: ledgersQueryKey });
-      toast.success("Ledger updated");
+      toast.success("Ledger updated", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setAction(null);
     },
     onError: (error) => toast.error("Unable to update ledger", { description: message(error) })

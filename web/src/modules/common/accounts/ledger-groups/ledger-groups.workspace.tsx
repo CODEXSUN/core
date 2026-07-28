@@ -60,7 +60,9 @@ export function LedgerGroupsWorkspace() {
           : deactivateLedgerGroup(record.id),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: ledgerGroupsQueryKey });
-      toast.success("Ledger group updated");
+      toast.success("Ledger group updated", {
+        description: "The latest changes were saved and are ready to use."
+      });
       setAction(null);
     },
     onError: (error) =>

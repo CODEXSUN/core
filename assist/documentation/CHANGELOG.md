@@ -2,13 +2,26 @@
 
 ## Version State
 
-Current version: 1.0.48
-Release tag: v-1.0.48
-Changelog label: v 1.0.48
+Current version: 1.0.49
+Release tag: v-1.0.49
+Changelog label: v 1.0.49
 
-## Unreleased
+## v-1.0.49
 
-### Add reusable Core host-composition contracts
+### [v 1.0.49] 2026-07-29 12:16 am - Add CXApp composition and organisation defaults
+
+#### Database Changes
+
+- Database update: Yes.
+- Added repeatable Administrator access defaults, financial years spanning three years before and
+  after the current year, and default-company landing-application support.
+
+#### App Codebase Changes
+
+- Added public CXApp API, database lifecycle, and owner-rendered web composition contracts.
+- Standardized Core organisation and master workspaces on shared autocomplete, table, numeric-input,
+  and application-shell behavior.
+- Bumped repository version to 1.0.49.
 
 ## v-1.0.48
 

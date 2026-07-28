@@ -160,7 +160,7 @@ export function ContactForm({
             ) : null}
             <WorkspaceAnimatedTabs
               keepMounted
-              contentClassName="mt-5"
+              contentClassName="mt-0 pt-5"
               onValueChange={(value) => setActiveTab(value as ContactTab)}
               tabs={tabs}
               value={activeTab}

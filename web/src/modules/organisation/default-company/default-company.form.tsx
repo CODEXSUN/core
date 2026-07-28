@@ -46,6 +46,7 @@ export function DefaultCompanyForm({
   };
   return (
     <WorkspaceUpsertDialog
+      className="sm:max-w-xl"
       description="This singleton controls the startup company, accounting year, and landing app for the tenant."
       onClose={onCancel}
       open={open}
