@@ -2,9 +2,29 @@
 
 ## Version State
 
-Current version: 1.0.49
-Release tag: v-1.0.49
-Changelog label: v 1.0.49
+Current version: 1.0.50
+Release tag: v-1.0.50
+Changelog label: v 1.0.50
+
+## v-1.0.50
+
+### [v 1.0.50] 2026-07-29 5:27 pm - Add Core stack compatibility regression suite
+
+#### Database Changes
+
+- Database update: No.
+
+#### App Codebase Changes
+
+- Added an isolated Core `test:stack` MariaDB suite covering fresh and repeated migrations,
+  repeatable seeds, `core_*` physical tables, legacy compatibility views, and owner CRUD lifecycle
+  behavior.
+- Added regression assertions for every Core contract consumed by Billing, including companies,
+  financial years, contacts and addresses, currencies, ledgers, products, HSN codes, colours,
+  sizes, units, taxes, transports, work orders, and default-company settings.
+- Added repository-owned E2E environment loading and deterministic temporary-database cleanup so
+  compatibility checks run independently from Billing's test implementation.
+- Bumped repository version to 1.0.50.
 
 ## v-1.0.49
 
